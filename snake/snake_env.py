@@ -23,16 +23,10 @@ class SnakeGameEnv(gym.Env):
         self.action_space = spaces.Discrete(4)  # 0: UP, 1: DOWN, 2: LEFT, 3: RIGHT
 
         # 状态空间：3D 表示（网格 x 网格 x 3 通道）
-        # self.observation_space = spaces.Box(
-        #     low=0,
-        #     high=255,
-        #     shape=(self.grid_size, self.grid_size, 3),
-        #     dtype=np.uint8
-        # )
         self.observation_space = spaces.Box(
             low=0,
             high=255,
-            shape=(self.grid_size * self.grid_size * 3,),  # 展平后的状态维度
+            shape=(self.grid_size, self.grid_size, 3),
             dtype=np.uint8
         )
 
@@ -40,7 +34,7 @@ class SnakeGameEnv(gym.Env):
         if render_mode == "human":
             pygame.init()
             self.screen = pygame.display.set_mode((self.WINDOW_SIZE, self.WINDOW_SIZE))
-            pygame.display.set_caption("Snake RL Game")
+            pygame.display.set_caption("Snake Game")
             self.clock = pygame.time.Clock()
 
         self.reset()
@@ -61,13 +55,13 @@ class SnakeGameEnv(gym.Env):
         assert self.action_space.contains(action), "Invalid Action"
 
         # 更新方向
-        if action == 0 and self.direction != "DOWN":
+        if action == 0:
             self.direction = "UP"
-        elif action == 1 and self.direction != "UP":
+        elif action == 1:
             self.direction = "DOWN"
-        elif action == 2 and self.direction != "RIGHT":
+        elif action == 2:
             self.direction = "LEFT"
-        elif action == 3 and self.direction != "LEFT":
+        elif action == 3:
             self.direction = "RIGHT"
 
         # 更新蛇头位置
@@ -101,7 +95,7 @@ class SnakeGameEnv(gym.Env):
             self.snake_position.pop()  # 如果没吃到苹果，去掉尾部
 
         # 存活奖励
-        reward += 0.0001
+        reward += 0.001
 
         # 曼哈顿距离奖励（鼓励靠近苹果）
         distance = (abs(self.snake_head[0] - self.apple_position[0]) +

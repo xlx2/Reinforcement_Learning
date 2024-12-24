@@ -1,31 +1,31 @@
 import numpy as np
-from utils import dB2pow
 
 
 class FluidAntennaSystem:
     def __init__(
         self,
-        numOfYaxisAntennas: int,
-        numOfUsers: int,
-        numOfXaxisAntennas: int = 1,
-        noiseVariance = dB2pow(-10),
-        Wx = 1,
-        Wy = 1
-    ):
-        self.Nx = numOfXaxisAntennas
-        self.Ny = numOfYaxisAntennas
+        num_of_yaxis_antennas: int,
+        num_of_users: int,
+        noise_variance: float,
+        num_of_xaxis_antennas: int = 1,
+        w_xaxis=1,
+        w_yaxis=1
+    ) -> None:
+        self.Nx = num_of_xaxis_antennas
+        self.Ny = num_of_yaxis_antennas
         if self.Ny == 1:
-            raise ValueError("If you want a linear antenna array, please set numOfXaxisAntennas to zero instead.\n")
-        self.K = numOfUsers
-        self.sigma2 = noiseVariance
-        self.Wx = Wx
-        self.Wy = Wy
+            raise ValueError("If you want a linear antenna array, "
+                             "please set num_of_xaxis_antennas to zero instead.\n")
+        self.K = num_of_users
+        self.sigma2 = noise_variance
+        self.Wx = w_xaxis
+        self.Wy = w_yaxis
         self.N = self.Nx * self.Ny
 
         # Create 2D indices
-        ntx2, ntx1 = np.meshgrid(range(1, self.Ny + 1), range(1, self.Nx + 1))
-        self.ntx1 = ntx1.ravel()
-        self.ntx2 = ntx2.ravel()
+        nty, ntx = np.meshgrid(range(1, self.Ny + 1), range(1, self.Nx + 1))
+        self.ntx = ntx.ravel()
+        self.nty = nty.ravel()
 
         # Compute spatial correlation matrix
         self.J, self.dist1, self.dist2, self.d = self._compute_spatial_correlation()
@@ -40,9 +40,9 @@ class FluidAntennaSystem:
 
         for i in range(self.N):
             if (self.Nx - 1) != 0:
-                d1[:, i] = np.abs(self.ntx1[i] - self.ntx1) / (
+                d1[:, i] = np.abs(self.ntx[i] - self.ntx) / (
                         self.Nx - 1) * self.Wx
-            d2[:, i] = np.abs(self.ntx2[i] - self.ntx2) / (
+            d2[:, i] = np.abs(self.nty[i] - self.nty) / (
                     self.Ny - 1) * self.Wy
 
         d = np.sqrt(d1 ** 2 + d2 ** 2)  # Total distance
@@ -52,8 +52,7 @@ class FluidAntennaSystem:
         return J, d1, d2, d
 
     def get_channel(self):
-        g = np.sqrt(0.5) * (np.random.randn(self.N, self.K) +
-                            1j * np.random.randn(self.N, self.K))
+        g = np.sqrt(0.5) * (np.random.randn(self.N, self.K) + 1j * np.random.randn(self.N, self.K))
         h = np.zeros((self.N, self.K), dtype=complex)
         H = np.zeros((self.Nx, self.Ny, self.K), dtype=complex)
         phi = np.zeros((self.N, self.K))
